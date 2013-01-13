@@ -204,8 +204,18 @@ def get_post_params(post):
 	# If no actual parseable content was found, just link to the post
 	post_content = u''.join(content) or permalink
 
+	# DHS modification: clip the title at the first <br> tag and then go on with the existing logic.
+	# If there are stil more than 100 characters of non-tag text, this had no effect. Otherwise, it 
+	# limits the title to the first paragraph. I copied the variable because post_content is used later
+	# and the clipping needs to happen before the soup call because that will strip the markup.
+
+	post_content_for_title = post_content
+	first_paragraph_match = re.match(r"(.*?)<br", post_content_for_title)
+	if first_paragraph_match.group(1):
+		post_content_for_title = first_paragraph_match.group(1)
+
 	# Generate the post title out of just text [max: 100 characters]
-	post_title = u' '.join(x.string for x in soup(post_content).findAll(text=True))
+	post_title = u' '.join(x.string for x in soup(post_content_for_title).findAll(text=True))
 	post_title = space_compress_regex.sub(' ', post_title)
 	if len(post_title) > 100:
 		if post_title == permalink:
